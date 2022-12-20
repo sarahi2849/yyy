@@ -1,0 +1,1002 @@
+// Copyright 2019-2022 The Khronos Group Inc.
+//
+// SPDX-License-Identifier: CC-BY-4.0
+
+// Common Valid Usage
+// Common to all drawing commands
+include::{chapters}/commonvalidity/draw_dispatch_common.adoc[]
+  * [[VUID-{refpage}-renderPass-02684]]
+    The current render pass must: be <<renderpass-compatibility,compatible>>
+    with the pname:renderPass member of the
+    sname:VkGraphicsPipelineCreateInfo structure specified when creating the
+    sname:VkPipeline bound to ename:VK_PIPELINE_BIND_POINT_GRAPHICS
+  * [[VUID-{refpage}-subpass-02685]]
+    The subpass index of the current render pass must: be equal to the
+    pname:subpass member of the sname:VkGraphicsPipelineCreateInfo structure
+    specified when creating the sname:VkPipeline bound to
+    ename:VK_PIPELINE_BIND_POINT_GRAPHICS
+  * [[VUID-{refpage}-None-07748]]
+    If any shader statically accesses an input attachment, a valid
+    descriptor must: be bound to the pipeline via a descriptor set
+  * [[VUID-{refpage}-OpTypeImage-07468]]
+    If any shader executed by this pipeline accesses an code:OpTypeImage
+    variable with a code:Dim operand of code:SubpassData, it must: be
+    decorated with an code:InputAttachmentIndex that corresponds to a valid
+    input attachment in the current subpass
+  * [[VUID-{refpage}-None-07469]]
+    Input attachment views accessed in a subpass must: be created with the
+    same elink:VkFormat as the corresponding subpass definition, and be
+    created with a slink:VkImageView that is compatible with the attachment
+    referenced by the subpass'
+    pname:pInputAttachments[code:InputAttachmentIndex] in the currently
+    bound slink:VkFramebuffer as specified by
+    <<compatibility-inputattachment,Fragment Input Attachment
+    Compatibility>>
+  * [[VUID-{refpage}-None-06537]]
+    Memory backing image subresources used as attachments in the current
+    render pass must: not be written in any way other than as an attachment
+    by this command
+  * [[VUID-{refpage}-None-06538]]
+    If any recorded command in the current subpass will write to an image
+    subresource as an attachment, this command must: not read from the
+    memory backing that image subresource in any other way than as an
+    attachment
+  * [[VUID-{refpage}-None-06539]]
+    If any recorded command in the current subpass will read from an image
+    subresource used as an attachment in any way other than as an
+    attachment, this command must: not write to that image subresource as an
+    attachment
+  * [[VUID-{refpage}-None-06886]]
+    If the current render pass instance uses a depth/stencil attachment with
+    a read-only layout for the depth aspect, <<fragops-depth-write, depth
+    writes>> must: be disabled
+  * [[VUID-{refpage}-None-06887]]
+    If the current render pass instance uses a depth/stencil attachment with
+    a read-only layout for the stencil aspect, both front and back
+    pname:writeMask are not zero, and stencil test is enabled,
+    <<fragops-stencil, all stencil ops>> must: be ename:VK_STENCIL_OP_KEEP
+ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
+  * [[VUID-{refpage}-maxMultiviewInstanceIndex-02688]]
+    If the draw is recorded in a render pass instance with multiview
+    enabled, the maximum instance index must: be less than or equal to
+    slink:VkPhysicalDeviceMultiviewProperties::pname:maxMultiviewInstanceIndex
+endif::VK_VERSION_1_1,VK_KHR_multiview[]
+ifdef::VK_EXT_sample_locations[]
+  * [[VUID-{refpage}-sampleLocationsEnable-02689]]
+    If the bound graphics pipeline was created with
+    slink:VkPipelineSampleLocationsStateCreateInfoEXT::pname:sampleLocationsEnable
+    set to ename:VK_TRUE and the current subpass has a depth/stencil
+    attachment, then that attachment must: have been created with the
+    ename:VK_IMAGE_CREATE_SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_BIT_EXT bit set
+  * [[VUID-{refpage}-None-06666]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT dynamic state enabled then
+    flink:vkCmdSetSampleLocationsEXT must: have been called in the current
+    command buffer prior to this drawing command
+endif::VK_EXT_sample_locations[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+  * [[VUID-{refpage}-viewportCount-03417]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled, but
+    not the ename:VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT dynamic state enabled,
+    then flink:vkCmdSetViewportWithCount must: have been called in the
+    current command buffer prior to this drawing command, and the
+    pname:viewportCount parameter of fname:vkCmdSetViewportWithCount must:
+    match the sname:VkPipelineViewportStateCreateInfo::pname:scissorCount of
+    the pipeline
+  * [[VUID-{refpage}-scissorCount-03418]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT dynamic state enabled, but not
+    the ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled,
+    then flink:vkCmdSetScissorWithCount must: have been called in the
+    current command buffer prior to this drawing command, and the
+    pname:scissorCount parameter of fname:vkCmdSetScissorWithCount must:
+    match the sname:VkPipelineViewportStateCreateInfo::pname:viewportCount
+    of the pipeline
+  * [[VUID-{refpage}-viewportCount-03419]]
+    If the bound graphics pipeline state was created with both the
+    ename:VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT and
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic states enabled then
+    both flink:vkCmdSetViewportWithCount and flink:vkCmdSetScissorWithCount
+    must: have been called in the current command buffer prior to this
+    drawing command, and the pname:viewportCount parameter of
+    fname:vkCmdSetViewportWithCount must: match the pname:scissorCount
+    parameter of fname:vkCmdSetScissorWithCount
+ifdef::VK_NV_clip_space_w_scaling[]
+  * [[VUID-{refpage}-viewportCount-04137]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled, but
+    not the ename:VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_NV dynamic state
+    enabled, then the bound graphics pipeline must: have been created with
+    slink:VkPipelineViewportWScalingStateCreateInfoNV::pname:viewportCount
+    greater or equal to the pname:viewportCount parameter in the last call
+    to flink:vkCmdSetViewportWithCount
+  * [[VUID-{refpage}-viewportCount-04138]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT and
+    ename:VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_NV dynamic states enabled then
+    the pname:viewportCount parameter in the last call to
+    flink:vkCmdSetViewportWScalingNV must: be greater than or equal to the
+    pname:viewportCount parameter in the last call to
+    flink:vkCmdSetViewportWithCount
+endif::VK_NV_clip_space_w_scaling[]
+ifdef::VK_NV_shading_rate_image[]
+  * [[VUID-{refpage}-viewportCount-04139]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled, but
+    not the ename:VK_DYNAMIC_STATE_VIEWPORT_SHADING_RATE_PALETTE_NV dynamic
+    state enabled, then the bound graphics pipeline must: have been created
+    with
+    slink:VkPipelineViewportShadingRateImageStateCreateInfoNV::pname:viewportCount
+    greater or equal to the pname:viewportCount parameter in the last call
+    to flink:vkCmdSetViewportWithCount
+  * [[VUID-{refpage}-viewportCount-04140]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT and
+    ename:VK_DYNAMIC_STATE_VIEWPORT_SHADING_RATE_PALETTE_NV dynamic states
+    enabled then the pname:viewportCount parameter in the last call to
+    flink:vkCmdSetViewportShadingRatePaletteNV must: be greater than or
+    equal to the pname:viewportCount parameter in the last call to
+    flink:vkCmdSetViewportWithCount
+endif::VK_NV_shading_rate_image[]
+ifdef::VK_NV_viewport_swizzle[]
+  * [[VUID-{refpage}-VkPipelineVieportCreateInfo-04141]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled and a
+    slink:VkPipelineViewportSwizzleStateCreateInfoNV structure chained from
+    slink:VkPipelineViewportStateCreateInfo, then the bound graphics
+    pipeline must: have been created with
+    slink:VkPipelineViewportSwizzleStateCreateInfoNV::pname:viewportCount
+    greater or equal to the pname:viewportCount parameter in the last call
+    to flink:vkCmdSetViewportWithCount
+endif::VK_NV_viewport_swizzle[]
+ifdef::VK_NV_scissor_exclusive[]
+  * [[VUID-{refpage}-VkPipelineVieportCreateInfo-04142]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled and a
+    slink:VkPipelineViewportExclusiveScissorStateCreateInfoNV structure
+    chained from slink:VkPipelineViewportStateCreateInfo, then the bound
+    graphics pipeline must: have been created with
+    slink:VkPipelineViewportExclusiveScissorStateCreateInfoNV::pname:exclusiveScissorCount
+    greater or equal to the pname:viewportCount parameter in the last call
+    to flink:vkCmdSetViewportWithCount
+endif::VK_NV_scissor_exclusive[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+  * [[VUID-{refpage}-None-04876]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE dynamic state enabled
+    then flink:vkCmdSetRasterizerDiscardEnable must: have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-04877]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE dynamic state enabled then
+    flink:vkCmdSetDepthBiasEnable must: have been called in the current
+    command buffer prior to this drawing command
+ifdef::VK_EXT_extended_dynamic_state2[]
+  * [[VUID-{refpage}-logicOp-04878]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LOGIC_OP_EXT dynamic state enabled then
+    flink:vkCmdSetLogicOpEXT must: have been called in the current command
+    buffer prior to this drawing command and the pname:logicOp must: be a
+    valid elink:VkLogicOp value
+endif::VK_EXT_extended_dynamic_state2[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+ifdef::VK_KHR_fragment_shading_rate[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+  * [[VUID-{refpage}-primitiveFragmentShadingRateWithMultipleViewports-04552]]
+    If the <<limits-primitiveFragmentShadingRateWithMultipleViewports,
+    pname:primitiveFragmentShadingRateWithMultipleViewports>> limit is not
+    supported, the bound graphics pipeline was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled, and
+    any of the shader stages of the bound graphics pipeline write to the
+    code:PrimitiveShadingRateKHR built-in, then
+    flink:vkCmdSetViewportWithCount must: have been called in the current
+    command buffer prior to this drawing command, and the
+    pname:viewportCount parameter of fname:vkCmdSetViewportWithCount must:
+    be `1`
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_KHR_fragment_shading_rate[]
+  * [[VUID-{refpage}-blendEnable-04727]]
+    If rasterization is not disabled in the bound graphics pipeline, then
+    for each color attachment in the subpass, if the corresponding image
+    view's <<resources-image-view-format-features,format features>> do not
+    contain ename:VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT, then the
+    pname:blendEnable member of the corresponding element of the
+    pname:pAttachments member of pname:pColorBlendState must: be
+    ename:VK_FALSE
+ifdef::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-multisampledRenderToSingleSampled-07284]]
+    If rasterization is not disabled in the bound graphics pipeline, and
+    none of the `apiext:VK_AMD_mixed_attachment_samples` extension, the
+    `apiext:VK_NV_framebuffer_mixed_samples` extension, or the
+    <<features-multisampledRenderToSingleSampled,
+    pname:multisampledRenderToSingleSampled>> feature are enabled, then
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    must: be the same as the current subpass color and/or depth/stencil
+    attachments
+endif::VK_EXT_multisampled_render_to_single_sampled[]
+ifndef::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-rasterizationSamples-04740]]
+    If rasterization is not disabled in the bound graphics pipeline, and
+    neither the `apiext:VK_AMD_mixed_attachment_samples` nor the
+    `apiext:VK_NV_framebuffer_mixed_samples` extensions are enabled, then
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    must: be the same as the current subpass color and/or depth/stencil
+    attachments
+endif::VK_EXT_multisampled_render_to_single_sampled[]
+ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+  * [[VUID-{refpage}-imageView-06172]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the pname:imageView member of
+    pname:pDepthAttachment is not dlink:VK_NULL_HANDLE, and the pname:layout
+    member of pname:pDepthAttachment is
+    ename:VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, this command
+    must: not write any values to the depth attachment
+  * [[VUID-{refpage}-imageView-06173]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the pname:imageView member of
+    pname:pStencilAttachment is not dlink:VK_NULL_HANDLE, and the
+    pname:layout member of pname:pStencilAttachment is
+    ename:VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, this command
+    must: not write any values to the stencil attachment
+ifdef::VK_VERSION_1_1,VK_KHR_maintenance2[]
+  * [[VUID-{refpage}-imageView-06174]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the pname:imageView member of
+    pname:pDepthAttachment is not dlink:VK_NULL_HANDLE, and the pname:layout
+    member of pname:pDepthAttachment is
+    ename:VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL, this
+    command must: not write any values to the depth attachment
+  * [[VUID-{refpage}-imageView-06175]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the pname:imageView member of
+    pname:pStencilAttachment is not dlink:VK_NULL_HANDLE, and the
+    pname:layout member of pname:pStencilAttachment is
+    ename:VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL, this
+    command must: not write any values to the stencil attachment
+endif::VK_VERSION_1_1,VK_KHR_maintenance2[]
+ifdef::VK_VERSION_1_2,VK_KHR_separate_depth_stencil_layouts[]
+  * [[VUID-{refpage}-imageView-06176]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the pname:imageView member of
+    pname:pDepthAttachment is not dlink:VK_NULL_HANDLE, and the pname:layout
+    member of pname:pDepthAttachment is
+    ename:VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL, this command must: not
+    write any values to the depth attachment
+  * [[VUID-{refpage}-imageView-06177]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the pname:imageView member of
+    pname:pStencilAttachment is not dlink:VK_NULL_HANDLE, and the
+    pname:layout member of pname:pStencilAttachment is
+    ename:VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL, this command must: not
+    write any values to the stencil attachment
+endif::VK_VERSION_1_2,VK_KHR_separate_depth_stencil_layouts[]
+  * [[VUID-{refpage}-viewMask-06178]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound graphics pipeline must:
+    have been created with a
+    slink:VkPipelineRenderingCreateInfo::pname:viewMask equal to
+    slink:VkRenderingInfo::pname:viewMask
+  * [[VUID-{refpage}-colorAttachmentCount-06179]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound graphics pipeline must:
+    have been created with a
+    slink:VkPipelineRenderingCreateInfo::pname:colorAttachmentCount equal to
+    slink:VkRenderingInfo::pname:colorAttachmentCount
+  * [[VUID-{refpage}-colorAttachmentCount-06180]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingInfo::pname:colorAttachmentCount greater than `0`, then
+    each element of the slink:VkRenderingInfo::pname:pColorAttachments array
+    with a pname:imageView not equal to dlink:VK_NULL_HANDLE must: have been
+    created with a elink:VkFormat equal to the corresponding element of
+    slink:VkPipelineRenderingCreateInfo::pname:pColorAttachmentFormats used
+    to create the currently bound graphics pipeline
+  * [[VUID-{refpage}-colorAttachmentCount-07616]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingInfo::pname:colorAttachmentCount greater than `0`, then
+    each element of the slink:VkRenderingInfo::pname:pColorAttachments array
+    with a pname:imageView equal to dlink:VK_NULL_HANDLE must: have the
+    corresponding element of
+    slink:VkPipelineRenderingCreateInfo::pname:pColorAttachmentFormats used
+    to create the currently bound pipeline equal to
+    ename:VK_FORMAT_UNDEFINED
+ifdef::VK_EXT_color_write_enable[]
+  * [[VUID-{refpage}-None-07749]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT dynamic state enabled then
+    flink:vkCmdSetColorWriteEnableEXT must: have been called in the current
+    command buffer prior to this drawing command
+  * [[VUID-{refpage}-attachmentCount-07750]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT dynamic state enabled then
+    the pname:attachmentCount parameter of fname:vkCmdSetColorWriteEnableEXT
+    must: be greater than or equal to the
+    sname:VkPipelineColorBlendStateCreateInfo::pname:attachmentCount of the
+    currently bound graphics pipeline
+endif::VK_EXT_color_write_enable[]
+ifdef::VK_EXT_discard_rectangles[]
+  * [[VUID-{refpage}-None-07751]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT dynamic state enabled then
+    flink:vkCmdSetDiscardRectangleEXT must: have been called in the current
+    command buffer prior to this drawing command
+endif::VK_EXT_discard_rectangles[]
+  * [[VUID-{refpage}-pDepthAttachment-06181]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineRenderingCreateInfo::pname:depthAttachmentFormat used to
+    create the currently bound graphics pipeline must: be equal to the
+    elink:VkFormat used to create
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView
+  * [[VUID-{refpage}-pDepthAttachment-07617]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView was
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineRenderingCreateInfo::pname:depthAttachmentFormat used to
+    create the currently bound graphics pipeline must: be equal to
+    ename:VK_FORMAT_UNDEFINED
+  * [[VUID-{refpage}-pStencilAttachment-06182]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineRenderingCreateInfo::pname:stencilAttachmentFormat used
+    to create the currently bound graphics pipeline must: be equal to the
+    elink:VkFormat used to create
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView
+  * [[VUID-{refpage}-pStencilAttachment-07618]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView was
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineRenderingCreateInfo::pname:stencilAttachmentFormat used
+    to create the currently bound graphics pipeline must: be equal to
+    ename:VK_FORMAT_UNDEFINED
+ifdef::VK_KHR_fragment_shading_rate[]
+  * [[VUID-{refpage}-imageView-06183]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingFragmentShadingRateAttachmentInfoKHR::pname:imageView
+    was not dlink:VK_NULL_HANDLE, the currently bound graphics pipeline
+    must: have been created with
+    ename:VK_PIPELINE_CREATE_RENDERING_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR
+endif::VK_KHR_fragment_shading_rate[]
+ifdef::VK_EXT_fragment_density_map[]
+  * [[VUID-{refpage}-imageView-06184]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering and
+    slink:VkRenderingFragmentDensityMapAttachmentInfoEXT::pname:imageView
+    was not dlink:VK_NULL_HANDLE, the currently bound graphics pipeline
+    must: have been created with
+    ename:VK_PIPELINE_CREATE_RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_BIT_EXT
+endif::VK_EXT_fragment_density_map[]
+ifdef::VK_AMD_mixed_attachment_samples,VK_NV_framebuffer_mixed_samples[]
+  * [[VUID-{refpage}-colorAttachmentCount-06185]]
+    If the currently bound pipeline was created with a
+    slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and the current render
+    pass instance was begun with flink:vkCmdBeginRendering with a
+    slink:VkRenderingInfo::pname:colorAttachmentCount parameter greater than
+    `0`, then each element of the
+    slink:VkRenderingInfo::pname:pColorAttachments array with a
+    pname:imageView not equal to dlink:VK_NULL_HANDLE must: have been
+    created with a sample count equal to the corresponding element of the
+    pname:pColorAttachmentSamples member of
+    slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV used to create the currently bound
+    graphics pipeline
+  * [[VUID-{refpage}-pDepthAttachment-06186]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline was created with
+    a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of the
+    pname:depthStencilAttachmentSamples member of
+    slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV used to create the currently bound
+    graphics pipeline must: be equal to the sample count used to create
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView
+  * [[VUID-{refpage}-pStencilAttachment-06187]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline was created with
+    a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of the
+    pname:depthStencilAttachmentSamples member of
+    slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV used to create the currently bound
+    graphics pipeline must: be equal to the sample count used to create
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView
+ifdef::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-multisampledRenderToSingleSampled-07285]]
+    If the currently bound pipeline was created without a
+    slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and the
+    <<features-multisampledRenderToSingleSampled,
+    pname:multisampledRenderToSingleSampled>> feature is not enabled, and
+    the current render pass instance was begun with
+    flink:vkCmdBeginRendering with a
+    slink:VkRenderingInfo::pname:colorAttachmentCount parameter greater than
+    `0`, then each element of the
+    slink:VkRenderingInfo::pname:pColorAttachments array with a
+    pname:imageView not equal to dlink:VK_NULL_HANDLE must: have been
+    created with a sample count equal to the value of
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    used to create the currently bound graphics pipeline
+  * [[VUID-{refpage}-multisampledRenderToSingleSampled-07286]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline was created
+    without a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and the
+    <<features-multisampledRenderToSingleSampled,
+    pname:multisampledRenderToSingleSampled>> feature is not enabled, and
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    used to create the currently bound graphics pipeline must: be equal to
+    the sample count used to create
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView
+  * [[VUID-{refpage}-multisampledRenderToSingleSampled-07287]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline was created
+    without a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and the
+    <<features-multisampledRenderToSingleSampled,
+    pname:multisampledRenderToSingleSampled>> feature is not enabled, and
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    used to create the currently bound graphics pipeline must: be equal to
+    the sample count used to create
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView
+endif::VK_EXT_multisampled_render_to_single_sampled[]
+ifndef::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-colorAttachmentCount-06188]]
+    If the currently bound pipeline was created without a
+    slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and the current render
+    pass instance was begun with flink:vkCmdBeginRendering with a
+    slink:VkRenderingInfo::pname:colorAttachmentCount parameter greater than
+    `0`, then each element of the
+    slink:VkRenderingInfo::pname:pColorAttachments array with a
+    pname:imageView not equal to dlink:VK_NULL_HANDLE must: have been
+    created with a sample count equal to the value of
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    used to create the currently bound graphics pipeline
+  * [[VUID-{refpage}-pDepthAttachment-06189]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline was created
+    without a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    used to create the currently bound graphics pipeline must: be equal to
+    the sample count used to create
+    slink:VkRenderingInfo::pname:pDepthAttachment->imageView
+  * [[VUID-{refpage}-pStencilAttachment-06190]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline was created
+    without a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, and
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView was not
+    dlink:VK_NULL_HANDLE, the value of
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    used to create the currently bound graphics pipeline must: be equal to
+    the sample count used to create
+    slink:VkRenderingInfo::pname:pStencilAttachment->imageView
+endif::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-renderPass-06198]]
+    If the current render pass instance was begun with
+    flink:vkCmdBeginRendering, the currently bound pipeline must: have been
+    created with a slink:VkGraphicsPipelineCreateInfo::pname:renderPass
+    equal to dlink:VK_NULL_HANDLE
+endif::VK_AMD_mixed_attachment_samples,VK_NV_framebuffer_mixed_samples[]
+endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+ifdef::VK_EXT_primitives_generated_query[]
+  * [[VUID-{refpage}-primitivesGeneratedQueryWithRasterizerDiscard-06708]]
+    If the <<features-primitivesGeneratedQueryWithRasterizerDiscard,
+    pname:primitivesGeneratedQueryWithRasterizerDiscard>> feature is not
+    enabled and the ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT query is
+    active, <<primsrast-discard,rasterization discard>> must: not be enabled
+ifdef::VK_EXT_transform_feedback[]
+  * [[VUID-{refpage}-primitivesGeneratedQueryWithNonZeroStreams-06709]]
+    If the <<features-primitivesGeneratedQueryWithNonZeroStreams,
+    pname:primitivesGeneratedQueryWithNonZeroStreams>> feature is not
+    enabled and the ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT query is
+    active, the bound graphics pipeline must: not have been created with a
+    non-zero value in
+    sname:VkPipelineRasterizationStateStreamCreateInfoEXT::pname:rasterizationStream
+endif::VK_EXT_transform_feedback[]
+endif::VK_EXT_primitives_generated_query[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+  * [[VUID-{refpage}-None-07619]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_TESSELLATION_DOMAIN_ORIGIN_EXT dynamic state
+    enabled then flink:vkCmdSetTessellationDomainOriginEXT must have been
+    called in the current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07620]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT dynamic state enabled then
+    flink:vkCmdSetDepthClampEnableEXT must have been called in the current
+    command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07621]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_POLYGON_MODE_EXT dynamic state enabled then
+    flink:vkCmdSetPolygonModeEXT must have been called in the current
+    command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07622]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT dynamic state enabled
+    then flink:vkCmdSetRasterizationSamplesEXT must have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07623]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_MASK_EXT dynamic state enabled then
+    flink:vkCmdSetSampleMaskEXT must have been called in the current command
+    buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07624]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT dynamic state
+    enabled then flink:vkCmdSetAlphaToCoverageEnableEXT must have been
+    called in the current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07625]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT dynamic state enabled
+    then flink:vkCmdSetAlphaToOneEnableEXT must have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07626]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT dynamic state enabled then
+    flink:vkCmdSetLogicOpEnableEXT must have been called in the current
+    command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07627]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT dynamic state enabled then
+    flink:vkCmdSetColorBlendEnableEXT must have been called in the current
+    command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07628]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT dynamic state enabled
+    then flink:vkCmdSetColorBlendEquationEXT must have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07629]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT dynamic state enabled then
+    flink:vkCmdSetColorWriteMaskEXT must have been called in the current
+    command buffer prior to this drawing command
+ifdef::VK_EXT_transform_feedback[]
+  * [[VUID-{refpage}-None-07630]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_STREAM_EXT dynamic state enabled
+    then flink:vkCmdSetRasterizationStreamEXT must have been called in the
+    current command buffer prior to this drawing command
+endif::VK_EXT_transform_feedback[]
+ifdef::VK_EXT_conservative_rasterization[]
+  * [[VUID-{refpage}-None-07631]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_CONSERVATIVE_RASTERIZATION_MODE_EXT dynamic state
+    enabled then flink:vkCmdSetConservativeRasterizationModeEXT must have
+    been called in the current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07632]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT dynamic
+    state enabled then flink:vkCmdSetExtraPrimitiveOverestimationSizeEXT
+    must have been called in the current command buffer prior to this
+    drawing command
+endif::VK_EXT_conservative_rasterization[]
+ifdef::VK_EXT_depth_clip_enable[]
+  * [[VUID-{refpage}-None-07633]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_DEPTH_CLIP_ENABLE_EXT dynamic state enabled then
+    flink:vkCmdSetDepthClipEnableEXT must have been called in the current
+    command buffer prior to this drawing command
+endif::VK_EXT_depth_clip_enable[]
+ifdef::VK_EXT_sample_locations[]
+  * [[VUID-{refpage}-None-07634]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT dynamic state enabled
+    then flink:vkCmdSetSampleLocationsEnableEXT must have been called in the
+    current command buffer prior to this drawing command
+endif::VK_EXT_sample_locations[]
+ifdef::VK_EXT_blend_operation_advanced[]
+  * [[VUID-{refpage}-None-07635]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT dynamic state enabled
+    then flink:vkCmdSetColorBlendAdvancedEXT must have been called in the
+    current command buffer prior to this drawing command
+endif::VK_EXT_blend_operation_advanced[]
+ifdef::VK_EXT_provoking_vertex[]
+  * [[VUID-{refpage}-None-07636]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_PROVOKING_VERTEX_MODE_EXT dynamic state enabled
+    then flink:vkCmdSetProvokingVertexModeEXT must have been called in the
+    current command buffer prior to this drawing command
+endif::VK_EXT_provoking_vertex[]
+ifdef::VK_EXT_line_rasterization[]
+  * [[VUID-{refpage}-None-07637]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT dynamic state enabled
+    then flink:vkCmdSetLineRasterizationModeEXT must have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07638]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT dynamic state enabled
+    then flink:vkCmdSetLineStippleEnableEXT must have been called in the
+    current command buffer prior to this drawing command
+endif::VK_EXT_line_rasterization[]
+ifdef::VK_EXT_depth_clip_control[]
+  * [[VUID-{refpage}-None-07639]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT dynamic state
+    enabled then flink:vkCmdSetDepthClipNegativeOneToOneEXT must have been
+    called in the current command buffer prior to this drawing command
+endif::VK_EXT_depth_clip_control[]
+ifdef::VK_NV_clip_space_w_scaling[]
+  * [[VUID-{refpage}-None-07640]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_ENABLE_NV dynamic state
+    enabled then flink:vkCmdSetViewportWScalingEnableNV must have been
+    called in the current command buffer prior to this drawing command
+endif::VK_NV_clip_space_w_scaling[]
+ifdef::VK_NV_viewport_swizzle[]
+  * [[VUID-{refpage}-None-07641]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_SWIZZLE_NV dynamic state enabled then
+    flink:vkCmdSetViewportSwizzleNV must have been called in the current
+    command buffer prior to this drawing command
+endif::VK_NV_viewport_swizzle[]
+ifdef::VK_NV_fragment_coverage_to_color[]
+  * [[VUID-{refpage}-None-07642]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV dynamic state enabled
+    then flink:vkCmdSetCoverageToColorEnableNV must have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07643]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_LOCATION_NV dynamic state
+    enabled then flink:vkCmdSetCoverageToColorLocationNV must have been
+    called in the current command buffer prior to this drawing command
+endif::VK_NV_fragment_coverage_to_color[]
+ifdef::VK_NV_framebuffer_mixed_samples[]
+  * [[VUID-{refpage}-None-07644]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_MODE_NV dynamic state enabled
+    then flink:vkCmdSetCoverageModulationModeNV must have been called in the
+    current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07645]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_ENABLE_NV dynamic state
+    enabled then flink:vkCmdSetCoverageModulationTableEnableNV must have
+    been called in the current command buffer prior to this drawing command
+  * [[VUID-{refpage}-None-07646]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_NV dynamic state
+    enabled then flink:vkCmdSetCoverageModulationTableNV must have been
+    called in the current command buffer prior to this drawing command
+endif::VK_NV_framebuffer_mixed_samples[]
+ifdef::VK_NV_shading_rate_image[]
+  * [[VUID-{refpage}-None-07647]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SHADING_RATE_IMAGE_ENABLE_NV dynamic state
+    enabled then flink:vkCmdSetShadingRateImageEnableNV must have been
+    called in the current command buffer prior to this drawing command
+endif::VK_NV_shading_rate_image[]
+ifdef::VK_NV_representative_fragment_test[]
+  * [[VUID-{refpage}-None-07648]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV dynamic
+    state enabled then flink:vkCmdSetRepresentativeFragmentTestEnableNV must
+    have been called in the current command buffer prior to this drawing
+    command
+endif::VK_NV_representative_fragment_test[]
+ifdef::VK_NV_coverage_reduction_mode[]
+  * [[VUID-{refpage}-None-07649]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_REDUCTION_MODE_NV dynamic state enabled
+    then flink:vkCmdSetCoverageReductionModeNV must have been called in the
+    current command buffer prior to this drawing command
+endif::VK_NV_coverage_reduction_mode[]
+  * [[VUID-{refpage}-pColorBlendEnables-07470]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT state enabled and the last
+    call to flink:vkCmdSetColorBlendEnableEXT set pname:pColorBlendEnables
+    for any attachment to ename:VK_TRUE, then for those attachments in the
+    subpass the corresponding image view's
+    <<resources-image-view-format-features,format features>> must: contain
+    ename:VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT
+  * [[VUID-{refpage}-rasterizationSamples-07471]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT state enabled, and the
+    current subpass does not use any color and/or depth/stencil attachments,
+    then the pname:rasterizationSamples in the last call to
+    flink:vkCmdSetRasterizationSamplesEXT must: follow the rules for a
+    <<renderpass-noattachments, zero-attachment subpass>>
+  * [[VUID-{refpage}-samples-07472]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_MASK_EXT state enabled and the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT state disabled, then
+    the pname:samples parameter in the last call to
+    flink:vkCmdSetSampleMaskEXT must: be greater or equal to the
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
+    parameter used to create the bound graphics pipeline
+  * [[VUID-{refpage}-samples-07473]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_MASK_EXT state and
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT states enabled, then
+    the pname:samples parameter in the last call to
+    flink:vkCmdSetSampleMaskEXT must: be greater or equal to the
+    pname:rasterizationSamples parameter in the last call to
+    flink:vkCmdSetRasterizationSamplesEXT
+ifndef::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-rasterizationSamples-07474]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT state enabled, and
+    neither the `apiext:VK_AMD_mixed_attachment_samples` nor the
+    `apiext:VK_NV_framebuffer_mixed_samples` extensions are enabled, then
+    the pname:rasterizationSamples in the last call to
+    flink:vkCmdSetRasterizationSamplesEXT must: be the same as the current
+    subpass color and/or depth/stencil attachments
+endif::VK_EXT_multisampled_render_to_single_sampled[]
+ifdef::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-multisampledRenderToSingleSampled-07475]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT state enabled, and none
+    of the `apiext:VK_AMD_mixed_attachment_samples` extension,
+    `apiext:VK_NV_framebuffer_mixed_samples` extension, or the
+    <<features-multisampledRenderToSingleSampled,
+    pname:multisampledRenderToSingleSampled>> feature is enabled, then the
+    pname:rasterizationSamples in the last call to
+    flink:vkCmdSetRasterizationSamplesEXT must: be the same as the current
+    subpass color and/or depth/stencil attachments
+endif::VK_EXT_multisampled_render_to_single_sampled[]
+  * [[VUID-{refpage}-firstAttachment-07476]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT dynamic state enabled then
+    flink:vkCmdSetColorBlendEnableEXT must: have been called in the current
+    command buffer prior to this drawing command, and the attachments
+    specified by the pname:firstAttachment and pname:attachmentCount
+    parameters of fname:vkCmdSetColorBlendEnableEXT calls must: specify an
+    enable for all active color attachments in the current subpass
+  * [[VUID-{refpage}-firstAttachment-07477]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT dynamic state enabled
+    then flink:vkCmdSetColorBlendEquationEXT must: have been called in the
+    current command buffer prior to this drawing command, and the
+    attachments specified by the pname:firstAttachment and
+    pname:attachmentCount parameters of fname:vkCmdSetColorBlendEquationEXT
+    calls must: specify the blend equations for all active color attachments
+    in the current subpass where blending is enabled
+  * [[VUID-{refpage}-firstAttachment-07478]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT dynamic state enabled then
+    flink:vkCmdSetColorWriteMaskEXT must: have been called in the current
+    command buffer prior to this drawing command, and the attachments
+    specified by the pname:firstAttachment and pname:attachmentCount
+    parameters of fname:vkCmdSetColorWriteMaskEXT calls must: specify the
+    color write mask for all active color attachments in the current subpass
+ifdef::VK_EXT_blend_operation_advanced[]
+  * [[VUID-{refpage}-firstAttachment-07479]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT dynamic state enabled
+    then flink:vkCmdSetColorBlendAdvancedEXT must: have been called in the
+    current command buffer prior to this drawing command, and the
+    attachments specified by the pname:firstAttachment and
+    pname:attachmentCount parameters of fname:vkCmdSetColorBlendAdvancedEXT
+    calls must: specify the advanced blend equations for all active color
+    attachments in the current subpass where blending is enabled
+  * [[VUID-{refpage}-advancedBlendMaxColorAttachments-07480]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT and
+    ename:VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT dynamic states enabled and
+    the last calls to flink:vkCmdSetColorBlendEnableEXT and
+    flink:vkCmdSetColorBlendAdvancedEXT have enabled advanced blending, then
+    the number of active color attachments in the current subpass must not
+    exceed <<limits-advancedBlendMaxColorAttachments,
+    pname:advancedBlendMaxColorAttachments>>
+endif::VK_EXT_blend_operation_advanced[]
+ifdef::VK_EXT_transform_feedback[]
+  * [[VUID-{refpage}-primitivesGeneratedQueryWithNonZeroStreams-07481]]
+    If the <<features-primitivesGeneratedQueryWithNonZeroStreams,
+    pname:primitivesGeneratedQueryWithNonZeroStreams>> feature is not
+    enabled and the ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT query is
+    active, and the bound graphics pipeline was created with
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_STREAM_EXT state enabled, the last
+    call to flink:vkCmdSetRasterizationStreamEXT must: have set the
+    pname:rasterizationStream to zero
+endif::VK_EXT_transform_feedback[]
+ifdef::VK_EXT_sample_locations[]
+  * [[VUID-{refpage}-sampleLocationsPerPixel-07482]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT state enabled and the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT state disabled, then
+    the pname:sampleLocationsPerPixel member of pname:pSampleLocationsInfo
+    in the last call to flink:vkCmdSetSampleLocationsEXT must: equal the
+    pname:rasterizationSamples member of the
+    slink:VkPipelineMultisampleStateCreateInfo structure the bound graphics
+    pipeline has been created with
+  * [[VUID-{refpage}-sampleLocationsPerPixel-07483]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT state enabled and the
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT state enabled, then the
+    pname:sampleLocationsPerPixel member of pname:pSampleLocationsInfo in
+    the last call to flink:vkCmdSetSampleLocationsEXT must: equal the
+    pname:rasterizationSamples parameter of the last call to
+    flink:vkCmdSetRasterizationSamplesEXT
+  * [[VUID-{refpage}-sampleLocationsEnable-07484]]
+    If the bound graphics pipeline was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT state enabled, and
+    pname:sampleLocationsEnable was ename:VK_TRUE in the last call to
+    flink:vkCmdSetSampleLocationsEnableEXT, and the current subpass has a
+    depth/stencil attachment, then that attachment must: have been created
+    with the ename:VK_IMAGE_CREATE_SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_BIT_EXT
+    bit set
+  * [[VUID-{refpage}-sampleLocationsEnable-07485]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT state enabled and the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT state enabled, and if
+    pname:sampleLocationsEnable was ename:VK_TRUE in the last call to
+    flink:vkCmdSetSampleLocationsEnableEXT, then the
+    pname:sampleLocationsInfo.sampleLocationGridSize.width in the last call
+    to flink:vkCmdSetSampleLocationsEXT must: evenly divide
+    slink:VkMultisamplePropertiesEXT::pname:sampleLocationGridSize.width as
+    returned by flink:vkGetPhysicalDeviceMultisamplePropertiesEXT with a
+    pname:samples parameter equaling pname:rasterizationSamples
+  * [[VUID-{refpage}-sampleLocationsEnable-07486]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT state enabled and the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT state enabled, and if
+    pname:sampleLocationsEnable was ename:VK_TRUE in the last call to
+    flink:vkCmdSetSampleLocationsEnableEXT, then the
+    pname:sampleLocationsInfo.sampleLocationGridSize.height in the last call
+    to flink:vkCmdSetSampleLocationsEXT must: evenly divide
+    slink:VkMultisamplePropertiesEXT::pname:sampleLocationGridSize.height as
+    returned by flink:vkGetPhysicalDeviceMultisamplePropertiesEXT with a
+    pname:samples parameter equaling pname:rasterizationSamples
+  * [[VUID-{refpage}-sampleLocationsEnable-07487]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT state enabled, and if
+    pname:sampleLocationsEnable was ename:VK_TRUE in the last call to
+    flink:vkCmdSetSampleLocationsEnableEXT, the fragment shader code must:
+    not statically use the extended instruction code:InterpolateAtSample
+endif::VK_EXT_sample_locations[]
+ifdef::VK_NV_framebuffer_mixed_samples[]
+  * [[VUID-{refpage}-coverageModulationTableEnable-07488]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_ENABLE_NV state enabled
+    and the last call to flink:vkCmdSetCoverageModulationTableEnableNV set
+    pname:coverageModulationTableEnable to ename:VK_TRUE, then the
+    pname:coverageModulationTableCount parameter in the last call to
+    flink:vkCmdSetCoverageModulationTableNV must: equal the current
+    pname:rasterizationSamples divided by the number of color samples in the
+    current subpass
+  * [[VUID-{refpage}-rasterizationSamples-07489]]
+    If the `apiext:VK_NV_framebuffer_mixed_samples` extension is enabled,
+    and if current subpass has a depth/stencil attachment and depth test,
+    stencil test, or depth bounds test are enabled in the currently bound
+    pipeline state, then the current pname:rasterizationSamples must be the
+    same as the sample count of the depth/stencil attachment
+endif::VK_NV_framebuffer_mixed_samples[]
+ifdef::VK_NV_fragment_coverage_to_color[]
+  * [[VUID-{refpage}-coverageToColorEnable-07490]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV state enabled and the
+    last call to flink:vkCmdSetCoverageToColorEnableNV set the
+    pname:coverageToColorEnable to ename:VK_TRUE, then the current subpass
+    must have a color attachment at the location selected by the last call
+    to flink:vkCmdSetCoverageToColorLocationNV
+    pname:coverageToColorLocation, with a elink:VkFormat of
+    ename:VK_FORMAT_R8_UINT, ename:VK_FORMAT_R8_SINT,
+    ename:VK_FORMAT_R16_UINT, ename:VK_FORMAT_R16_SINT,
+    ename:VK_FORMAT_R32_UINT, or ename:VK_FORMAT_R32_SINT
+ifdef::VK_NV_coverage_reduction_mode[]
+  * [[VUID-{refpage}-coverageReductionMode-07491]]
+    If this `apiext:VK_NV_coverage_reduction_mode` extension is enabled, the
+    bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV and
+    ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT states enabled, the
+    current coverage reduction mode pname:coverageReductionMode, then the
+    current pname:rasterizationSamples, and the sample counts for the color
+    and depth/stencil attachments (if the subpass has them) must be a valid
+    combination returned by
+    flink:vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV
+endif::VK_NV_coverage_reduction_mode[]
+endif::VK_NV_fragment_coverage_to_color[]
+ifdef::VK_NV_viewport_swizzle[]
+  * [[VUID-{refpage}-viewportCount-07492]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT dynamic state enabled, but
+    not the ename:VK_DYNAMIC_STATE_VIEWPORT_SWIZZLE_NV dynamic state
+    enabled, then the bound graphics pipeline must: have been created with
+    slink:VkPipelineViewportSwizzleStateCreateInfoNV::pname:viewportCount
+    greater or equal to the pname:viewportCount parameter in the last call
+    to flink:vkCmdSetViewportWithCount
+  * [[VUID-{refpage}-viewportCount-07493]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT and
+    ename:VK_DYNAMIC_STATE_VIEWPORT_SWIZZLE_NV dynamic states enabled then
+    the pname:viewportCount parameter in the last call to
+    flink:vkCmdSetViewportSwizzleNV must: be greater than or equal to the
+    pname:viewportCount parameter in the last call to
+    flink:vkCmdSetViewportWithCount
+endif::VK_NV_viewport_swizzle[]
+ifdef::VK_NV_framebuffer_mixed_samples[]
+  * [[VUID-{refpage}-rasterizationSamples-07494]]
+    If the `apiext:VK_NV_framebuffer_mixed_samples` extension is enabled,
+    and if the current subpass has any color attachments and
+    pname:rasterizationSamples of the last call to
+    flink:vkCmdSetRasterizationSamplesEXT is greater than the number of
+    color samples, then the pipeline pname:sampleShadingEnable must: be
+    ename:VK_FALSE
+endif::VK_NV_framebuffer_mixed_samples[]
+ifdef::VK_EXT_line_rasterization[]
+  * [[VUID-{refpage}-stippledLineEnable-07495]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT or
+    ename:VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT dynamic states
+    enabled, and if the current pname:stippledLineEnable state is
+    ename:VK_TRUE and the current pname:lineRasterizationMode state is
+    ename:VK_LINE_RASTERIZATION_MODE_RECTANGULAR_EXT, then the
+    <<features-stippledRectangularLines, pname:stippledRectangularLines>>
+    feature must: be enabled
+  * [[VUID-{refpage}-stippledLineEnable-07496]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT or
+    ename:VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT dynamic states
+    enabled, and if the current pname:stippledLineEnable state is
+    ename:VK_TRUE and the current pname:lineRasterizationMode state is
+    ename:VK_LINE_RASTERIZATION_MODE_BRESENHAM_EXT, then the
+    <<features-stippledBresenhamLines, pname:stippledBresenhamLines>>
+    feature must: be enabled
+  * [[VUID-{refpage}-stippledLineEnable-07497]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT or
+    ename:VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT dynamic states
+    enabled, and if the current pname:stippledLineEnable state is
+    ename:VK_TRUE and the current pname:lineRasterizationMode state is
+    ename:VK_LINE_RASTERIZATION_MODE_RECTANGULAR_SMOOTH_EXT, then the
+    <<features-stippledSmoothLines, pname:stippledSmoothLines>> feature
+    must: be enabled
+  * [[VUID-{refpage}-stippledLineEnable-07498]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT or
+    ename:VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT dynamic states
+    enabled, and if the current pname:stippledLineEnable state is
+    ename:VK_TRUE and the current pname:lineRasterizationMode state is
+    ename:VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT, then the
+    <<features-stippledRectangularLines, pname:stippledRectangularLines>>
+    feature must: be enabled and
+    slink:VkPhysicalDeviceLimits::pname:strictLines must be VK_TRUE
+endif::VK_EXT_line_rasterization[]
+ifdef::VK_EXT_conservative_rasterization[]
+  * [[VUID-{refpage}-conservativePointAndLineRasterization-07499]]
+    If the bound graphics pipeline state was created with the
+    ename:VK_DYNAMIC_STATE_CONSERVATIVE_RASTERIZATION_MODE_EXT dynamic state
+    enabled, <<limits-conservativePointAndLineRasterization,
+    pname:conservativePointAndLineRasterization>> is not supported, and the
+    effective primitive topology output by the last pre-rasterization shader
+    stage is a line or point, then the pname:conservativeRasterizationMode
+    set by the last call to flink:vkCmdSetConservativeRasterizationModeEXT
+    must: be ename:VK_CONSERVATIVE_RASTERIZATION_MODE_DISABLED_EXT
+endif::VK_EXT_conservative_rasterization[]
+endif::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_mesh_shader[]
+  * [[VUID-{refpage}-stage-07073]]
+    If the currently bound pipeline was created with the
+    slink:VkPipelineShaderStageCreateInfo::pname:stage member of an element
+    of slink:VkGraphicsPipelineCreateInfo::pname:pStages set to
+    ename:VK_SHADER_STAGE_VERTEX_BIT,
+    ename:VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+    ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT or
+    ename:VK_SHADER_STAGE_GEOMETRY_BIT, then <<queries-mesh-shader, Mesh
+    Shader Queries>> must not be active
+endif::VK_EXT_mesh_shader[]
+// Common Valid Usage
